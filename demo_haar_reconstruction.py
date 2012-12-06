@@ -12,7 +12,7 @@ from reconstruction.util import generate_synthetic_data
 from time import time
 import matplotlib.pyplot as plt
 
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, Lasso
 
 # Synthetic data
 l = 256
@@ -33,6 +33,9 @@ t2 = time()
 print "reconstruction done in %f s" %(t2 - t1)
 
 l2_estimate = Ridge().fit(H, y).coef_.ravel()
+
+l1_estimate = Lasso(alpha=.01, tol=5e-4).fit(H, y,
+                    coef_init=x.ravel().astype(np.float)).coef_.ravel()
 
 # Fraction of errors of segmented image wrt ground truth
 err = [np.abs(x - (resi > 0.5)).mean() for resi in res]
@@ -56,24 +59,30 @@ plt.loglog(err, 'o')
 plt.xlabel('iteration number')
 plt.title('error fraction')
 
-plt.figure(figsize=(8, 3.3), edgecolor='k', facecolor='k')
-plt.subplot(131)
+plt.figure(figsize=(8, 8.6), edgecolor='k', facecolor='k')
+plt.subplot(221)
 plt.imshow(x, cmap=plt.cm.gnuplot2, interpolation='nearest', vmin=-.1)
 plt.axis('off')
-plt.title('Original image', color='w')
-plt.subplot(132)
+plt.title('Original image', color='w', size=20)
+plt.subplot(222)
 plt.imshow(np.reshape(l2_estimate, x.shape),
            cmap=plt.cm.gnuplot2, interpolation='nearest',
            vmin=-.2)
-plt.title('Non-sparse reconstruction', color='w')
 plt.axis('off')
-plt.subplot(133)
+plt.title('Non-sparse reconstruction', color='w', size=20)
+plt.subplot(223)
+plt.imshow(np.reshape(l1_estimate, x.shape),
+           cmap=plt.cm.gnuplot2, interpolation='nearest',
+           vmin=-.2)
+plt.title('Sparse image', color='w', size=20)
+plt.axis('off')
+plt.subplot(224)
 plt.imshow(res[-1], cmap=plt.cm.gnuplot2, interpolation='nearest',
            vmin=-.2)
-plt.title('Sparse reconstruction', color='w')
+plt.title('Sparse in Haar', color='w', size=20)
 plt.axis('off')
 
-plt.subplots_adjust(hspace=0.01, wspace=0.01, top=1, bottom=0, left=0,
+plt.subplots_adjust(hspace=0.07, wspace=0.05, top=.97, bottom=0, left=0,
                     right=1)
 
 plt.savefig('haar_tomo.svg', edgecolor='k', facecolor='k')
@@ -86,7 +95,7 @@ plt.imshow(error, cmap=plt.cm.gnuplot2, interpolation='nearest',
             vmin=-vmax, vmax=vmax)
 plt.axis('off')
 
-plt.subplots_adjust(hspace=0.01, wspace=0.01, top=1, bottom=0, left=0,
+plt.subplots_adjust(hspace=0.01, wspace=0.03, top=.95, bottom=0, left=0,
                     right=1)
 
 print 'Error norm: %.3e' % np.sqrt(np.sum(error **2))

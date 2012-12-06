@@ -36,33 +36,43 @@ y = H * x.ravel()[:, np.newaxis]
 y += 2*np.random.randn(*y.shape)
 
 # Reconstruction
-t1 = time()
 res, energies = fista_tv(y, 10, 300, H) 
-t2 = time()
-print "reconstruction done in %f s" %(t2 - t1)
+
+
 
 # Fraction of errors of segmented image wrt ground truth
 err = [np.abs(x - (resi > 0.5)).mean() for resi in res]
 
 error = x - res[-1]
-print 'Error norm: %.3e' % np.sqrt(np.sum(error **2))
+print 'TV error norm: %.3e' % np.sqrt(np.sum(error **2))
+
+haar = np.load('haar.npy')
+err_haar = x - haar
+print 'Haar error norm: %.3e' % np.sqrt(np.sum(err_haar **2))
+
+# Clip the gray value interval to enhance contrast
+err_max = 0.7 * np.abs(err_haar).max()
 
 # Display results
-plt.figure()
-plt.subplot(221)
-plt.imshow(x, cmap='gray', interpolation='nearest', vmin=0, vmax=1)
-plt.title('original data (256x256)')
+plt.figure(figsize=(11, 4))
+plt.subplot(131)
+plt.imshow(x, cmap='gnuplot2', interpolation='nearest', vmin=-0.1, vmax=1)
+plt.title('original data', fontsize=20)
 plt.axis('off')
-plt.subplot(222)
-plt.imshow(res[-1], cmap='gray', interpolation='nearest', vmin=0, vmax=1)
-plt.title('reconstruction after 100 iterations')
+plt.subplot(132)
+plt.imshow(err_haar, cmap='gnuplot2', interpolation='nearest',
+                vmin=-err_max, vmax=err_max)
+plt.title('error for Haar wavelet', fontsize=20)
 plt.axis('off')
-plt.subplot(223)
-plt.loglog(energies, 'o')
-plt.xlabel('iteration number')
-plt.title('energy')
-plt.subplot(224)
-plt.loglog(err, 'o')
-plt.xlabel('iteration number')
-plt.title('error fraction')
+plt.subplot(133)
+plt.imshow(error, cmap='gnuplot2', interpolation='nearest',
+                vmin=-err_max, vmax=err_max)
+plt.title('error for TV penalization', fontsize=20)
+plt.axis('off')
+plt.subplots_adjust(0.05, 0.05, 0.95, 0.95, 0.05, 0.05)
+
 plt.show()
+
+plt.savefig('tv_vs_haar.png')
+plt.savefig('tv_vs_haar.pdf')
+plt.savefig('tv_vs_haar.svg')

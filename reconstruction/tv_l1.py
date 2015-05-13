@@ -94,7 +94,6 @@ def _objective_function(input_img, output_img, gradient, weight):
             + weight * total_variation(gradient))
 
 
-@profile
 def tv_l1_fista(im, l1_ratio=.05, weight=50, dgap_tol=5.e-5, x_tol=None,
                      n_iter_max=200,
                      check_gap_frequency=4, val_min=None, val_max=None,
